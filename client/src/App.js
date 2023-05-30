@@ -22,7 +22,6 @@ function Home(userDetails) {
 }
 
 function Login() {
-  console.log(`${process.env.REACT_APP_API_URL}/auth/google/callback`);
   const googleAuth = () => {
     window.open(
       `${process.env.REACT_APP_API_URL}/auth/google/callback`,

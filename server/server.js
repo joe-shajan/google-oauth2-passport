@@ -6,6 +6,7 @@ import cors from "cors";
 import passport from "passport";
 import cookieSession from "cookie-session";
 import "./passport.js";
+import { connect } from "./db.js";
 const app = express();
 
 app.use(
@@ -18,6 +19,7 @@ app.use(
 
 app.use(passport.initialize());
 app.use(passport.session());
+connect();
 
 app.use(
   cors({
@@ -28,8 +30,6 @@ app.use(
 );
 
 app.get("/auth/login/success", (req, res) => {
-  console.log("in auth login");
-  console.log(req.user);
   if (req.user) {
     res.status(200).json({
       error: false,

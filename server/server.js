@@ -7,6 +7,9 @@ import passport from "passport";
 import cookieSession from "cookie-session";
 import "./passport.js";
 import { connect } from "./db.js";
+import jwt from "jsonwebtoken";
+import { User } from "./userModel.js";
+
 const app = express();
 
 app.use(
@@ -29,13 +32,33 @@ app.use(
   })
 );
 
-app.get("/auth/login/success", (req, res) => {
+app.get("/auth/login/success", async (req, res) => {
   if (req.user) {
-    res.status(200).json({
-      error: false,
-      message: "Successfully Loged In",
-      user: req.user,
-    });
+    let existingUser = await User.findOne({ id: req.user.id });
+
+    if (!existingUser) {
+      return res.status(403).json({ error: true, message: "Not Authorized" });
+    }
+
+    jwt.sign(
+      { user: existingUser },
+      "secretKey",
+      { expiresIn: "1h" },
+      (err, token) => {
+        if (err) {
+          return res.json({
+            token: null,
+          });
+        }
+
+        res.status(200).json({
+          error: false,
+          message: "Successfully Loged In",
+          user: existingUser,
+          token,
+        });
+      }
+    );
   } else {
     res.status(403).json({ error: true, message: "Not Authorized" });
   }
@@ -57,6 +80,28 @@ app.get(
     failureRedirect: "/auth/login/failed",
   })
 );
+
+// app.get(
+//   "/auth/google/callback",
+//   passport.authenticate("google", { session: false }),
+//   (req, res) => {
+//     jwt.sign(
+//       { user: req.user },
+//       "secretKey",
+//       { expiresIn: "1h" },
+//       (err, token) => {
+//         if (err) {
+//           return res.json({
+//             token: null,
+//           });
+//         }
+//         res.json({
+//           token,
+//         });
+//       }
+//     );
+//   }
+// );
 
 app.get("/auth/logout", (req, res) => {
   req.logout();
